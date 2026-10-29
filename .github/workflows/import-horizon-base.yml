@@ -1,0 +1,56 @@
+name: Import Horizon source base
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/import-horizon-base.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: import-horizon-base
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out DiamondLauncherRUST
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Fetch public Horizon source
+        uses: actions/checkout@v4
+        with:
+          repository: horizon-rust/horizon
+          ref: main
+          path: /tmp/horizon-source
+          fetch-depth: 1
+
+      - name: Fill source files that are not in DiamondLauncher yet
+        shell: bash
+        run: |
+          rsync -a --ignore-existing --exclude='.git/' /tmp/horizon-source/ ./
+          test -f Cargo.toml
+          test -d crates/horizon-client
+          test -d crates/horizon-core
+          printf 'Tracked source file count before commit: '
+          find . -type f -not -path './.git/*' | wc -l
+
+      - name: Commit and push imported source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No new upstream source files to import."
+            exit 0
+          fi
+          git commit -m "Import missing Horizon source files"
+          git push origin HEAD:main
