@@ -29,13 +29,13 @@ jobs:
         with:
           repository: horizon-rust/horizon
           ref: main
-          path: /tmp/horizon-source
+          path: horizon-source
           fetch-depth: 1
 
       - name: Fill source files that are not in DiamondLauncher yet
         shell: bash
         run: |
-          rsync -a --ignore-existing --exclude='.git/' /tmp/horizon-source/ ./
+          rsync -a --ignore-existing --exclude='.git/' horizon-source/ ./
           test -f Cargo.toml
           test -d crates/horizon-client
           test -d crates/horizon-core
