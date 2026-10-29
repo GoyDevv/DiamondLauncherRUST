@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DiamondLauncher</string>
+    <string name="app_tagline">MC Rust Launcher for Android · Powered by Horizon &amp; BoardBridge</string>
+    <string name="legal_disclaimer">NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</string>
+</resources>
