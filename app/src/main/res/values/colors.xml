@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#0D0E13</color>
+    <color name="diamond_cyan">#38BDF8</color>
+    <color name="horizon_violet">#9A86FF</color>
+    <color name="black">#FF000000</color>
+</resources>
