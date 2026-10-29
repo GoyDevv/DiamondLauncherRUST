@@ -13,6 +13,8 @@ val cargoAbis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
 val cargoRustJniLibsDir: File = layout.buildDirectory.dir("rustJniLibs").get().asFile
 
 android {
+    // Package kept as com.boardbridge.bridge so exported JNI symbols
+    // (Java_com_boardbridge_bridge_NativeBridge_*) link without changes.
     namespace = "com.boardbridge.bridge"
     compileSdk = 35
     ndkVersion = "27.2.12479018"
@@ -23,16 +25,30 @@ android {
         targetSdk = 35
         versionCode = 2
         versionName = "0.2.0-diamond"
-        ndk { abiFilters.addAll(cargoAbis) }
+
+        ndk {
+            abiFilters.addAll(cargoAbis)
+        }
     }
 
-    sourceSets.getByName("main") { jniLibs.srcDir(cargoRustJniLibsDir) }
-    packaging { jniLibs { useLegacyPackaging = false } }
+    sourceSets.getByName("main") {
+        jniLibs.srcDir(cargoRustJniLibsDir)
+    }
+
+    packaging {
+        jniLibs {
+            // 16 KB page alignment required for Android 15 (API 35) 64-bit devices.
+            useLegacyPackaging = false
+        }
+    }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
@@ -40,8 +56,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true; buildConfig = false }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = false
+    }
 }
 
 dependencies {
@@ -67,7 +90,9 @@ fun resolveNdkHome(): File? {
     val sdkRoot = System.getenv("ANDROID_SDK_ROOT")?.takeIf { it.isNotBlank() }
         ?: System.getenv("ANDROID_HOME")?.takeIf { it.isNotBlank() }
         ?: rootProject.file("local.properties").takeIf { it.isFile }?.let { properties ->
-            Properties().apply { properties.inputStream().use { load(it) } }.getProperty("sdk.dir")
+            Properties()
+                .apply { properties.inputStream().use { load(it) } }
+                .getProperty("sdk.dir")
         }
     val ndkVersion = android.ndkVersion
     if (sdkRoot.isNullOrBlank() || ndkVersion.isNullOrBlank()) return null
@@ -79,17 +104,27 @@ val ndkHome: File? = resolveNdkHome()
 val cargoBuildBoardBridge = tasks.register<Exec>("cargoBuildBoardBridge") {
     group = "boardbridge"
     description = "Cross-compiles the Rust bridge (boardbridge/) into build/rustJniLibs with cargo-ndk."
+
     workingDir = rootProject.file("boardbridge")
-    inputs.dir(rootProject.file("boardbridge/src")).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir(rootProject.file("boardbridge/src"))
+        .withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.file(rootProject.file("boardbridge/Cargo.toml"))
     inputs.property("profile", cargoProfile)
     outputs.dir(cargoRustJniLibsDir)
 
-    val arguments = mutableListOf("cargo", "ndk", "--platform", "26")
-    cargoAbis.forEach { abi -> arguments += listOf("-t", abi) }
+    val arguments = mutableListOf(
+        "cargo", "ndk",
+        "--platform", "26",
+    )
+    cargoAbis.forEach { abi ->
+        arguments += listOf("-t", abi)
+    }
     arguments += listOf("-o", cargoRustJniLibsDir.absolutePath, "build")
-    if (cargoProfile == "release") arguments += "--release"
+    if (cargoProfile == "release") {
+        arguments += "--release"
+    }
     commandLine(arguments)
+
     environment("RUSTFLAGS", "-C link-arg=-Wl,-z,max-page-size=16384")
     ndkHome?.let { environment("ANDROID_NDK_HOME", it.absolutePath) }
 
@@ -108,5 +143,7 @@ val cargoBuildBoardBridge = tasks.register<Exec>("cargoBuildBoardBridge") {
 if (skipRust) {
     logger.lifecycle("skipRust is set: libboardbridge.so is not rebuilt from boardbridge/")
 } else {
-    tasks.named("preBuild").configure { dependsOn(cargoBuildBoardBridge) }
+    tasks.named("preBuild").configure {
+        dependsOn(cargoBuildBoardBridge)
+    }
 }
