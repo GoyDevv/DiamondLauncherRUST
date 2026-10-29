@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Horizon 3 sliced bars + horizon line -->
+    <path android:fillColor="#9A86FF" android:pathData="M24,68 h60 v4 h-60 z" />
+    <path android:fillColor="#ECEDF3" android:fillAlpha="0.35" android:pathData="M30,75 h48 v3 h-48 z" />
+    <!-- Diamond facet emblem above the horizon -->
+    <path android:fillColor="#38BDF8" android:pathData="M54,24 L74,44 L54,64 L34,44 Z" />
+    <path android:fillColor="#BAE6FD" android:pathData="M54,24 L64,44 L54,64 L44,44 Z" />
+    <path android:fillColor="#ECEDF3" android:pathData="M42,36 h24 v3 h-24 z" />
+</vector>
